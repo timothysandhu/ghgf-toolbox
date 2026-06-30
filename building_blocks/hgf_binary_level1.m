@@ -1,4 +1,4 @@
-function [mu_1, pi_1, muhat_1, pihat_1, da_1] = hgf_binary_level1(u_k, ka_1, muhat_2, varargin)
+function [mu_1, pi_1, muhat_1, pihat_1, da_1] = hgf_binary_level1(u_k, ka_1, muhat_2, num_prec, varargin)
 % Computes the level-1 update for binary HGF models.
 %
 % In the binary HGF, level 1 represents the binary outcome directly.
@@ -16,6 +16,7 @@ function [mu_1, pi_1, muhat_1, pihat_1, da_1] = hgf_binary_level1(u_k, ka_1, muh
 %   u_k       Input (binary observation or continuous in PU case)
 %   ka_1      Coupling from level 2 to level 1
 %   muhat_2   Predicted mean at level 2
+%   num_prec  Numeric precision (optional, defaults to 1e-3)
 %   Optional name-value pair:
 %     'pu'    Followed by [al, eta0, eta1] for perceptual uncertainty
 %
@@ -30,8 +31,8 @@ function [mu_1, pi_1, muhat_1, pihat_1, da_1] = hgf_binary_level1(u_k, ka_1, muh
 muhat_1 = tapas_sgm(ka_1 * muhat_2, 1);
 
 % Ensure numerical stability
-muhat_1 = max(muhat_1, 0.001);
-muhat_1 = min(muhat_1, 0.999);
+muhat_1 = max(muhat_1, num_prec);
+muhat_1 = min(muhat_1, 1 - num_prec);
 
 % Precision of prediction
 pihat_1 = 1/(muhat_1 * (1 - muhat_1));
