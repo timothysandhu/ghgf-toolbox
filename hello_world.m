@@ -55,51 +55,26 @@ u_config = align_priors(u_config);
 
 u_bopars_om3 = hgf_binary_bopars(u,u_config,true);
 
+% try ar1 
+ar1_bopars = hgf_binary_bopars(u,'hgf_ar1_binary_config',true);
+% some correlation between m_3 and om2 
 
-%% update config function
+e_ar1_bopars = hgf_binary_bopars(u,'ehgf_ar1_binary_config',true);
+% doesn't look right
 
-% test on binary, ar1
+% try ar1 uhgf 
+u_ar1_config = uhgf_ar1_binary_config();
+hgf_binary_bopars(u,'uhgf_ar1_binary_config',true);
+% fails
 
-% LOOK AT ALIGN PRIORS
+% values from the demo didn't seem to work, trying original
+u_ar1_config1 = u_ar1_config;
+ar1_config = hgf_ar1_binary_config();
+u_ar1_config1.priormus = [ar1_config.priormus NaN 0 0]; % stick the rho's on
+u_ar1_config1 = align_priors_fields(u_ar1_config1);
+hgf_binary_bopars(u,u_ar1_config1,true);
 
-% update(config,param_name,mu_or_sa,new_value)
 
-% param_name - split to param level 
-% check level 
-
-% check param_name against all possible params in the prc
-% - if not found, maybe add transformation tag
-
-% list field names
-
-% find which params are free
-
-% find the location of the param
-
-% change it
-
-% perform align_priors
-
-% print transforms every time and free parameters every time
-% log/logit/exp?
-
-% add full print option
-
-% Print results
-ftbrm = {'p', 'ptrans'};
-dispprc = rmfield(r.p_prc, ftbrm);
-dispobs = rmfield(r.p_obs, ftbrm);
-
-disp(' ')
-disp('Results:');
-disp(' ')
-disp('Parameter estimates for the perceptual model:');
-disp(dispprc)
-if ~isempty(fieldnames(dispobs))
-    disp(' ')
-    disp('Parameter estimates for the observation model:');
-    disp(dispobs)
-end
 
 %% initialize model function 
 % wrapper around update_config

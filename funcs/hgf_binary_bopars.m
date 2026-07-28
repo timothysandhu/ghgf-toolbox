@@ -18,10 +18,12 @@ end
 % config check 
 switch(class(config))
     case 'char'
+        plot_func = [config(1:end-7) '_plotTraj'];
     case 'struct'
         if ~prc_config_check(config)
             error("doesn't look like a hgf prc config")
         end
+        plot_func = [config.model '_plotTraj'];
     otherwise
         error("config must be either a string or a hgf prc config")
 end
@@ -40,7 +42,7 @@ bopars = fitModel([],...
 
 % plot optionally
 if plot
-hgf_binary_plotTraj(bopars)
+eval([plot_func '(bopars)'])
 end
 
 end
