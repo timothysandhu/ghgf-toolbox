@@ -1,4 +1,4 @@
-function print_config_info(config,param_fields)
+function print_config_info(out_config,param_fields,p_trans)
 % find the expected number of params
 n_param_fields = length(param_fields);
 if any(contains(param_fields,"ka"))
