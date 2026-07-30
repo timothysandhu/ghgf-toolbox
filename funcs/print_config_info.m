@@ -1,4 +1,14 @@
-function print_config_info(out_config,param_fields,p_trans)
+function print_config_info(out_config,varargin)
+
+% if supplied 
+if ~isempty(varargin)
+    param_fields = varargin{1};
+    p_trans = varargin{2};
+else
+    [param_fields,p_trans] = find_param_fields(out_config);
+end
+
+
 % find the expected number of params
 n_param_fields = length(param_fields);
 if any(contains(param_fields,"ka"))
