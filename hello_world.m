@@ -74,25 +74,19 @@ u_ar1_config1.priormus = [ar1_config.priormus NaN 0 0]; % stick the rho's on
 u_ar1_config1 = align_priors_fields(u_ar1_config1);
 hgf_binary_bopars(u,u_ar1_config1,true);
 
+%% update/init
 
-
-%% initialize model function 
-% wrapper around update_config
-
-% takes in the string for the original config 
-% calls the config function
-% then takes in a cell/table with incoming parameters
-% run through update_config
+% need to update with multiple parameters 
+% ? take in a cell/table with incoming parameters
 
 %% 
 
 % think its probably more intuitive to use the config throughout any model
 % fitting 
 
-
-
-
 %% could also make sim_unitsq function
+
+% maybe just simModel_config
 
 % sim_unitsq(u,prc_config,zeta,seed)
 
