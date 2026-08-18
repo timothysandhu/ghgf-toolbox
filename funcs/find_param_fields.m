@@ -70,9 +70,9 @@ end
 
 function check_stripped_param_names(param_names)
 
-if ~iscell(param_names)
-    error("supply the cell array of stripped param names")
-end
+%if ~iscell(param_names)
+%    error("supply the cell array of stripped param names")
+%end
 
 names = string(param_names);
 if any(endsWith(names, "mu")) || any(endsWith(names, "sa"))

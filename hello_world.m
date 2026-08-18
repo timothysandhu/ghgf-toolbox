@@ -67,17 +67,33 @@ u_ar1_config = uhgf_ar1_binary_config();
 hgf_binary_bopars(u,'uhgf_ar1_binary_config',true);
 % fails
 
+% needed to add num_prec stuff
+% should probs have left this for the rosetta stone branch
+
+% works fine now, bar the plot
+% no uhgf_ar1_binary_plotTraj
+u_ar1_bopars = hgf_binary_bopars(u,'uhgf_ar1_binary_config',false);
+ehgf_ar1_binary_plotTraj(u_ar1_bopars)
+
 % values from the demo didn't seem to work, trying original
-u_ar1_config1 = u_ar1_config;
-ar1_config = hgf_ar1_binary_config();
-u_ar1_config1.priormus = [ar1_config.priormus NaN 0 0]; % stick the rho's on
-u_ar1_config1 = align_priors_fields(u_ar1_config1);
-hgf_binary_bopars(u,u_ar1_config1,true);
+% do this a different way now
 
 %% update/init
 
 % need to update with multiple parameters 
 % ? take in a cell/table with incoming parameters
+
+config = hgf_binary_config();
+update_config(config,"sa0_3","sa",1);
+init_config('hgf_binary_config',"sa0_3","sa",1);
+
+% demonstrate mu0 sa0
+update_config(config,"sa_0_3","sa",1);
+update_config(config,"sa0_3","sa",1);
+
+% disable printing
+update_config(config,"sa_0_3","sa",1,"none");
+
 
 %% 
 
