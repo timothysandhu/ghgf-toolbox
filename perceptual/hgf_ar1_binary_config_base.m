@@ -142,4 +142,9 @@ c.prc_fun = str2func([update_type, '_ar1_binary']);
 % from the space they are estimated in
 c.transp_prc_fun = str2func([update_type, '_ar1_binary_transp']);
 
+% If the update type is 'ehgf', create a numeric precision field 
+if strcmp(update_type, 'ehgf')
+    c.num_prec = 1e-3; % Default value for numeric precision in eHGF
+end
+
 end

@@ -18,6 +18,13 @@ catch
     update_type = 'ehgf';
 end
 
+% If the update type is 'ehgf', check for numeric precision in config
+try 
+    num_prec = r.c_prc.num_prec;
+catch
+    num_prec = 1e-3;
+end
+
 % Transform parameters back to their native space if needed
 if ~isempty(varargin) && strcmp(varargin{1},'trans')
     if strcmp(update_type, 'hgf')
@@ -102,7 +109,7 @@ for k = 2:1:n
 
         % 1st level
         [mu(k,1), pi(k,1), muhat(k,1), pihat(k,1), da(k,1)] = ...
-            hgf_binary_level1(u(k), ka(1), muhat(k,2));
+            hgf_binary_level1(u(k), ka(1), muhat(k,2), num_prec);
 
         % 2nd level
         pihat(k,2) = hgf_pihat(pi(k-1,2), 1, ka(2), mu(k-1,3), om(2));
