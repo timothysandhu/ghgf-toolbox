@@ -81,7 +81,7 @@ validate_print_opt(print_opt);
 % param_name - split to param level
 p_parts = split(lower(param_name),"_");
 
-% check numebr of parts, make sure mu0 and sa0 caught 
+% check numebr of parts, make sure mu0 and sa0 caught explicitly
 if all(strcmp(p_parts(1:2),["mu";"0"])) || all(strcmp(p_parts(1:2),["sa";"0"]))
     error('for initial means and variances at x level, use mu0_x or sa0_x')
 elseif numel(p_parts) ~= 2
