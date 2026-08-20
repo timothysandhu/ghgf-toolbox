@@ -1,5 +1,54 @@
-function out_config = update_config(config,param_name,mu_or_sa,new_value,varargin)
+function out_config = update_config(config,varargin)
+%UPDATE_CONFIG Update one or more parameters in a HGF prc config structure.
+% initially just prc? test on binary, ar1
+% to prevent erroneous calls to the inner funcs, put them within this one
+%
+% Single-parameter usage (updates exactly one field):
+%   out_config = update_config(config,param_name,mu_or_sa,new_value)
+%   out_config = update_config(config,param_name,mu_or_sa,new_value,print_opt)
+%
+% Batch usage (applies every row of a parameter table/struct array in turn):
+%   out_config = update_config(config,param_updates)
+%   out_config = update_config(config,param_updates,print_opt)
+%
+% param_updates must be either:
+%   - a table with variables param_name, mu_or_sa, new_value
+%     (one row per update), or
+%   - a struct array with fields param_name, mu_or_sa, new_value
+%     (one element per update)
+%
+% print_opt:
+%   pass "none" as the last argument to suppress the printed free-parameter
+%   summary. No other value is accepted (matches the single-update rule).
+%
+% Examples:
+%   update_config(config,"om_2","mu",-3)
+%   update_config(config,"om_2","mu",-3,"none")
+%
+%   upd = table(["om_2";"ka_1"],["mu";"mu"],[-3;0.5], ...
+%           'VariableNames',{'param_name','mu_or_sa','new_value'});
+%   update_config(config,upd)
+%   update_config(config,upd,"none")
+
+switch nargin
+    case 2
+        out_config = update_config_multi(config,varargin{1},"");
+    case 3
+        out_config = update_config_multi(config,varargin{1},varargin{2});
+    case 4
+        out_config = update_config_single(config,varargin{1},varargin{2},varargin{3},"");
+    case 5
+        out_config = update_config_single(config,varargin{1},varargin{2},varargin{3},varargin{4});
+    otherwise
+        error("update_config expects 2 to 5 input arguments (got %d)",nargin);
+end
+
+end
+
+function out_config = update_config_single(config,param_name,mu_or_sa,new_value,print_opt)
 %update_config Update a HGF config structure
+%UPDATE_CONFIG_SINGLE Update a single (param_name,mu_or_sa) field to new_value.
+% do not run this directly, run it through update_config wrapper
 
 % initially just prc?
 % test on binary, ar1
@@ -24,27 +73,19 @@ if ~isnumeric(new_value)
     error("final argument should be the new value")
 end
 
-% parse vargin
-if ~isempty(varargin)
-    print_opt = varargin{1};
-    if print_opt ~= "none"
-        error("you can only disable printing with none")
-    end
-end
+% print_opt check
+validate_print_opt(print_opt);
 
 %% param_name checks
 
 % param_name - split to param level
 p_parts = split(lower(param_name),"_");
 
-% make sure mu0 and sa0 caught 
+% check numebr of parts, make sure mu0 and sa0 caught 
 if all(strcmp(p_parts(1:2),["mu";"0"])) || all(strcmp(p_parts(1:2),["sa";"0"]))
     error('for initial means and variances at x level, use mu0_x or sa0_x')
-end
-
-% check number of parts
-if numel(p_parts) ~= 2
-    error('param name should split by _ into two parts');
+elseif numel(p_parts) ~= 2
+    error('param name should split by _ into two parts'); 
 end
 
 % assign
@@ -97,10 +138,31 @@ out_config = align_priors(config);
 
 %% list free params
 
-if exist('print_opt','var')
-    if print_opt == "none"
-        return
-    end
-else
+if print_opt ~= "none"
     print_config_info(out_config,param_fields,p_trans)
+end
+
+end
+
+function out_config = update_config_multi(config,param_tbl,print_opt)
+%UPDATE_CONFIG_BATCH Apply a table/struct array of parameter updates in turn.
+% Each row is applied via update_config_single (with its own printing
+% suppressed); the free-parameter summary, if requested, is printed once
+% at the end against the final config.
+% do not run this directly, run it through update_config wrapper
+
+validate_print_opt(print_opt);
+validate_hgf_param_tbl(param_tbl);
+ 
+out_config = config;
+for i = 1:height(param_tbl)
+    out_config = update_config_single(out_config,param_tbl.param_name(i), ...
+        param_tbl.mu_or_sa(i),param_tbl.new_value(i),"none");
+end
+ 
+if print_opt ~= "none"
+    [param_fields,p_trans] = find_param_fields(out_config);
+    print_config_info(out_config,param_fields,p_trans)
+end
+ 
 end

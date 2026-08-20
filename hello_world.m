@@ -94,6 +94,9 @@ update_config(config,"sa0_3","sa",1);
 % disable printing
 update_config(config,"sa_0_3","sa",1,"none");
 
+% try multiple
+tbl_2l = hgf_param_tbl(["ka_2";"om_3"],["mu";"sa"],[-Inf;0]);
+update_config(config,tbl_2l);
 
 %% 
 
