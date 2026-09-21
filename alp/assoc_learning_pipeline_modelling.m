@@ -1,76 +1,48 @@
-%% set up model fitting function with given configs (nace_ehgf* scripts)
+% this was originally assoc_learning_pipeline_modelling
 
-% notes
-% still can't get propranolol right 
-% try rt model for fh
-% [ ] exclude drumstickers
+% paths 
+cd 'C:\Users\timot\Documents\GitHub\ghgf-toolbox'
+addpath(genpath("C:\Users\timot\Documents\GitHub\ghgf-toolbox")) % should include funcs
 
-%% data
-
-addpath C:\Users\timot\Desktop\camraa_online\camraa_learning\alp_data_new
-
-task_names = ["face_house","stick_snake"];
-task_name = task_names(1);
-
-% load data
-data = readmatrix(strcat(task_name,"_hgf_bin.csv"));
-processed_spreadsheet = readtable(strcat(task_name,'_processed_spreadsheet.csv'));
-
-% split up 
-id = data(:,1);
-hgf_resp = data(:,2:end);
-
-% exclude drumstickers
-ds = readmatrix(strcat(task_name,"_drumstick.csv"));
-data = data(~ismember(id,ds));
+% dirs
+data_dir = 'C:\Users\timot\Documents\GitHub\gorillar\';
+u_dir = 'C:\Users\timot\Documents\GitHub\assoc_learning\camraa\';
 
 % get camraa input 
-u = load('camraa_input.txt'); % camraa input
+u = load(strcat(u_dir,'camraa_input.txt')); % camraa input
+
+% prep task data 
+[fh_data,fh_id]=prep_data(data_dir,"face_house",true);
+[ss_data,ss_id]=prep_data(data_dir,"stick_snake",true);
+
+% combine 
+all_data = [fh_data;ss_data];
+all_id = [fh_id;ss_id];
+all_val = [repmat("sensory",length(fh_id),1);repmat("sensory",length(ss_id),1)];
 
 %% parameter recovery 
 
-% for model fitting stuff - try seedRandInit to get reproducibility
-% should maybe try inspecting parameter correlations here too as per
-% Eddie's thesis
+% see param_rec and pipeline_param_rec
 
-% pu - need noise column
-% noise_col = 0.9*ones(200,1);
-% noise_col(strcmp(processed_spreadsheet.noise,"no"))=.1;
-% u2 = u;
-% u2(:,2) = noise_col;
+%% sept 2026 
 
-% new param recovery method
-% define configs before 
+% 2 level 
+prc_config = ehgf_binary_config();
+config_2l = make_hgf_2l(prc_config);
 
-% prc_config = tapas_hgf_binary_pu_tbt_2l_config();
-% prc_config.omsa(2) = 2; % needed for pu_tbt otherwise too wide - errors
-%u2(:,2) = noise_col;
+% model fit
+obs_config = unitsq_sgm_config();
+ehgf_fit = model_fit_all(u,all_data,config_2l,obs_config,all_id,all_val);
 
-prc_config = tapas_ehgf_binary_2l_config();
-prc_config.omsa(2) = 1;
-obs_config = tapas_unitsq_sgm_config();
-n_sim = 100;
+% extract 
 
-[simul,fitted]=pipeline_param_rec(u,prc_config,obs_config,n_sim);
+% check 
 
-%rw_config = tapas_rw_binary_config();
-% [simul_rw,fitted_rw]=pipeline_param_rec(u,rw_config,obs_config,n_sim); % maybe not needed
+% when we take drumstickers out of model agnostic, the anxiety finding goes
+% away 
 
-% extract what variables you want
-[sim_om2,fit_om2,corr_om2] = param_rec_extract(simul,fitted,"om_2");
-[sim_zeta,fit_zeta,corr_zeta] = param_rec_extract(simul,fitted,"zeta");
-%[sim_om3,fit_om3,corr_om3] = param_rec_extract(simul,fitted,"om_3");
-
-% plot them with a regression line
-subplot(1,3,1)
-param_rec_plot(sim_om2,fit_om2,corr_om2,"om_2")
-subplot(1,3,2)
-param_rec_plot(sim_om3,fit_om3,corr_om3,"om_3")
-subplot(1,3,3)
-param_rec_plot(sim_zeta,fit_zeta,corr_zeta,"zeta")
-
-% does param rec need to cover the full range parameter values that we see
-% in the data (probably)
+% could include them in the modelling fitting and then see if we can
+% exclude based on 
 
 %% 2025 addition 
 
@@ -120,7 +92,6 @@ prc_config = tapas_ehgf_binary_2l_config();
 prc_config.omsa(2) = 1; % will people ask why 1? bms?
 obs_config = tapas_unitsq_sgm_config();
 fh_ehgf_fit = model_fit_all(u,hgf_resp,prc_config,obs_config,id);
-%ss_ehgf_fit = model_fit_all(u,hgf_resp,prc_config,obs_config,id);
 
 % ehgf increased var
 prc_config = tapas_ehgf_binary_2l_config();
