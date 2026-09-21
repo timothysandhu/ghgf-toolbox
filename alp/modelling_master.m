@@ -3,6 +3,7 @@
 % paths 
 cd 'C:\Users\timot\Documents\GitHub\ghgf-toolbox'
 addpath(genpath("C:\Users\timot\Documents\GitHub\ghgf-toolbox")) % should include funcs
+addpath(genpath("C:\Users\timot\Documents\GitHub\core\matlab"))
 
 % dirs
 data_dir = 'C:\Users\timot\Documents\GitHub\gorillar\';
@@ -15,10 +16,14 @@ u = load(strcat(u_dir,'camraa_input.txt')); % camraa input
 [fh_data,fh_id]=prep_data(data_dir,"face_house",true);
 [ss_data,ss_id]=prep_data(data_dir,"stick_snake",true);
 
+% drumstickers if needed 
+fh_ds = readmatrix(strcat(data_dir,"face_house","_drumstickers.csv"));
+ss_ds = readmatrix(strcat(data_dir,"face_house","_drumstickers.csv"));
+
 % combine 
 all_data = [fh_data;ss_data];
 all_id = [fh_id;ss_id];
-all_val = [repmat("sensory",length(fh_id),1);repmat("sensory",length(ss_id),1)];
+all_val = [repmat("sensory",length(fh_id),1);repmat("aversive",length(ss_id),1)];
 
 %% parameter recovery 
 
@@ -33,16 +38,20 @@ config_2l = make_hgf_2l(prc_config);
 % model fit
 obs_config = unitsq_sgm_config();
 ehgf_fit = model_fit_all(u,all_data,config_2l,obs_config,all_id,all_val);
-
-% extract 
+save("ehgf_no_ds.mat",'ehgf_fit')
 
 % check 
+[implausible_mu2,corr_params,failed_fit] = fit_check(ehgf_fit,false);
 
-% when we take drumstickers out of model agnostic, the anxiety finding goes
-% away 
+% extract 
+param_tbl = extract_hgf_params(ehgf_fit);
+low_om2_ind = find(str2double(param_tbl.om2)<-8);
 
-% could include them in the modelling fitting and then see if we can
-% exclude based on 
+% exclude 
+ind_to_exc = unique([implausible_mu2.index;corr_params.index;low_om2_ind]);
+param_tbl(ind_to_exc,:)=[];
+
+writetable(param_tbl,"ehgf_params.csv")
 
 %% 2025 addition 
 

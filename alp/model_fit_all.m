@@ -1,6 +1,5 @@
 function [fitted] = model_fit_all(hgf_input,resp,prc_config,obs_config,id,valence)
 % fit hgf's to all participants 
-% this was originally model_fit_all in assoc_learning/matlab
 % INPUTS
 % input - hgf input (u)
 % resp - matrix (n_ptp x n_trials) of responses - transformed preds/rt
