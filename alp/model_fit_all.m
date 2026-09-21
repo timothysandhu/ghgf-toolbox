@@ -1,57 +1,34 @@
-function [fitted] = model_fit_all(hgf_input,resp,prc_config,obs_config,id)
+function [fitted] = model_fit_all(hgf_input,resp,prc_config,obs_config,id,valence)
 % fit hgf's to all participants 
+% this was originally model_fit_all in assoc_learning/matlab
 % INPUTS
 % input - hgf input (u)
 % resp - matrix (n_ptp x n_trials) of responses - transformed preds/rt
 % prc_config - perceptual model config - should have all the edits in
 % obs_config - observation model config
 % id - ID vector to keep track of it all
+% valence - valence vector
 
-% get a string prc_config for bopars - nah bopars should have the right
-% variance (as in the same as the model fit) I think..
-% if strfind('tapas',prc_config.model)
-%     str_prc_config = [prc_config.model '_config'];
-% else
-%     str_prc_config = ['tapas_' prc_config.model '_config'];
-% end
+% bopars
+bopars_2l = hgf_binary_bopars(hgf_input,prc_config,false);
 
-% get the bopars for the input
-bopars = tapas_fitModel_trs([],...
-    hgf_input,...
-    prc_config,... % or str_prc_config
-    'tapas_bayes_optimal_binary_config',...
-    'tapas_quasinewton_optim_config');
+% bo updated config
+bo_config = update_config(prc_config,"om_2","mu",bopars_2l.p_prc.om(2));
 
 % set up the optim config
-optim_config = tapas_quasinewton_optim_config();
-
-% check the prc model and change the defaults based on bopars
-if contains(prc_config.model,'hgf')
-    prc_config.ommu = bopars.p_prc.om; % use bopars omega estimates
-    if sum(prc_config.logkasa)>0 % if any of the kappas are free
-        prc_config.logkamu = log(bopars.p_prc.ka);
-    end
-    optim_config.nRandInit = 5;
-elseif contains(prc_config.model,'rw')
-    prc_config.logitalmu = bopars.p_prc.ptrans(2);
-    optim_config.nRandInit = 5;
-elseif contains(prc_config.model,'k1')
-    prc_config.logmumu = bopars.p_prc.ptrans(1);
-    prc_config.logitvhat_1mu = bopars.p_prc.ptrans(3);
-    prc_config.logh_1mu = bopars.p_prc.ptrans(4);
-elseif contains(prc_config.model,'ph')
-    prc_config.logital_0mu = bopars.p_prc.ptrans(2);
-    prc_config.logSmu = bopars.p_prc.ptrans(3);    
-end
+optim_config = quasinewton_optim_config();
+optim_config.nRandInit = 5;
+optim_config.seedRandInit = 123;
 
 % start the loop
 fitted = cell(1,length(id)); % preallocate
 for ptp = 1:size(resp,1)
-    fitted{ptp} = tapas_fitModel_trs(resp(ptp,:)',... % make sure transposed predictions
+    fitted{ptp} = fitModel(resp(ptp,:)',... % make sure transposed predictions
         hgf_input,...
-        prc_config,...
+        bo_config,...
         obs_config,...
         optim_config); 
     fitted{ptp}.id = id(ptp);
-    disp(strcat("ptp ",num2str(ptp)," done"))
+    fitted{ptp}.valence = valence(ptp);
+    disp(strcat("ptp: ",num2str(id(ptp))," valence: ",valence(ptp)," done"))
 end

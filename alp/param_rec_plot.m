@@ -15,7 +15,7 @@ end
 hold on
 
 plot(sim,fit,'o',"LineWidth",4)
-plot_ymxc(sim,fit)
+plot_ymxc(sim,fit,4)
 title(strcat(title_prefix,' corr=',num2str(round(corr(2,1),3))), 'Interpreter', 'latex')
 xlabel('simulated', 'Interpreter', 'latex')
 ylabel('fitted', 'Interpreter', 'latex')
@@ -31,3 +31,4 @@ lowest = min(min(sim),min(fit));
 biggest = max(max(sim),max(fit));
 xlim([lowest biggest])
 ylim([lowest biggest])
+hold off
