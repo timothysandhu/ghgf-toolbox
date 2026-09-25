@@ -12,13 +12,23 @@ u_dir = 'C:\Users\timot\Documents\GitHub\assoc_learning\camraa\';
 % get camraa input 
 u = load(strcat(u_dir,'camraa_input.txt')); % camraa input
 
+% do we want drumstickers in - yes, exclude after
+drumstickers = true;
+min_rt = 100;
+min_rt_str = strcat("minrt",num2str(min_rt));
+
 % prep task data 
-[fh_data,fh_id]=prep_data(data_dir,"face_house",true);
-[ss_data,ss_id]=prep_data(data_dir,"stick_snake",true);
+if drumstickers % with drumstickers, set their exclusion to false
+    [fh_data,fh_id]=prep_data(data_dir,"face_house",min_rt,false);
+    [ss_data,ss_id]=prep_data(data_dir,"stick_snake",min_rt,false);
+else % without drumstickers, exclusion = true
+    [fh_data,fh_id]=prep_data(data_dir,"face_house",min_rt,true);
+    [ss_data,ss_id]=prep_data(data_dir,"stick_snake",min_rt,true);
+end
 
 % drumstickers if needed 
-fh_ds = readmatrix(strcat(data_dir,"face_house","_drumstickers.csv"));
-ss_ds = readmatrix(strcat(data_dir,"face_house","_drumstickers.csv"));
+fh_ds = readmatrix(strcat(data_dir,"data\",min_rt_str,"\","face_house_drumstickers_",min_rt_str,".csv"));
+ss_ds = readmatrix(strcat(data_dir,"data\",min_rt_str,"\","stick_snake_drumstickers_",min_rt_str,".csv"));
 
 % combine 
 all_data = [fh_data;ss_data];
@@ -34,11 +44,20 @@ all_val = [repmat("sensory",length(fh_id),1);repmat("aversive",length(ss_id),1)]
 % 2 level 
 prc_config = ehgf_binary_config();
 config_2l = make_hgf_2l(prc_config);
+config_2l = update_config(config_2l,"om_2","sa",1);
 
 % model fit
 obs_config = unitsq_sgm_config();
 ehgf_fit = model_fit_all(u,all_data,config_2l,obs_config,all_id,all_val);
-save("ehgf_no_ds.mat",'ehgf_fit')
+mat_prefix = strcat("ehgf_minrt",num2str(min_rt),"_");
+mat_suffix = "_ds.mat";
+
+if drumstickers
+    mat_mid = "with";
+else
+    mat_mid = "no";
+end
+save(strcat(mat_prefix,mat_mid,mat_suffix),'ehgf_fit')
 
 % check 
 [implausible_mu2,corr_params,failed_fit] = fit_check(ehgf_fit,false);
@@ -47,11 +66,35 @@ save("ehgf_no_ds.mat",'ehgf_fit')
 param_tbl = extract_hgf_params(ehgf_fit);
 low_om2_ind = find(str2double(param_tbl.om2)<-8);
 
+% exclude id's
+ind_to_exc = []; 
+if ~isempty(implausible_mu2)
+    ind_to_exc = [ind_to_exc;implausible_mu2.index];
+end
+if ~isempty(corr_params)
+    ind_to_exc = [ind_to_exc;corr_params.index];
+end
+if ~isempty(low_om2_ind)
+    ind_to_exc = [ind_to_exc;low_om2_ind];
+end
+if ~isempty(failed_fit)
+    ind_to_exc = [ind_to_exc;failed_fit];
+end
+
 % exclude 
-ind_to_exc = unique([implausible_mu2.index;corr_params.index;low_om2_ind]);
 param_tbl(ind_to_exc,:)=[];
 
-writetable(param_tbl,"ehgf_params.csv")
+% make file name 
+csv_prefix = strcat("ehgf_params_minrt",num2str(min_rt),"_");
+csv_suffix = "_ds.csv";
+
+if drumstickers
+    csv_mid = "with";
+else
+    csv_mid = "no";
+end
+writetable(param_tbl,strcat(data_dir,csv_prefix,csv_mid,csv_suffix))
+
 
 %% 2025 addition 
 
